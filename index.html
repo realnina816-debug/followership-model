@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>나의 팔로워십 유형은? - 런투컨설팅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+        }
+
+        .point-gradient {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
+
+        .score-option input[type="radio"] { display: none; }
+        .score-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        @media (max-width: 400px) {
+            .score-option label { width: 38px; height: 38px; font-size: 1rem; }
+        }
+
+        .score-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #customModal, #groupModal {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-2xl mx-auto w-full flex-1">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2">
+                나의 팔로워십 <span class="point-gradient">유형은?</span>
+            </h1>
+            <p id="headerSubtitle" class="text-slate-400 text-sm">진단 결과를 통해 당신의 스타일을 확인하세요</p>
+        </header>
+
+        <!-- Step 0: 입장 코드 입력 -->
+        <div id="stepCode" class="glass-card p-8 text-center fade-in">
+            <div class="mb-6">
+                <i class="fas fa-key text-5xl text-blue-500/50 mb-4"></i>
+                <h2 class="text-xl font-bold mb-2">입장 코드를 입력해 주세요</h2>
+                <p class="text-slate-400 text-sm">강사님께 받은 입장 코드를 입력하세요</p>
+            </div>
+            <input type="text" id="groupCode" placeholder="입장 코드 입력" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-center text-lg focus:outline-none focus:border-blue-500 mb-6 transition-colors uppercase">
+            <button onclick="verifyGroupCode()" class="w-full py-4 btn-primary rounded-xl font-bold text-lg">다음</button>
+        </div>
+
+        <!-- Step 1: 별명 입력 -->
+        <div id="stepName" class="glass-card p-8 text-center fade-in hidden">
+            <div class="mb-6">
+                <i class="fas fa-user-astronaut text-5xl text-blue-500/50 mb-4"></i>
+                <h2 class="text-xl font-bold mb-2">별명을 입력해 주세요</h2>
+                <p class="text-slate-400 text-sm">진단 결과 저장을 위해 사용하실 별명을 입력받습니다.</p>
+                <p id="groupInfo" class="text-blue-400 text-xs mt-2"></p>
+            </div>
+            <input type="text" id="userName" placeholder="별명 입력" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-center text-lg focus:outline-none focus:border-blue-500 mb-6 transition-colors">
+            <button onclick="startQuiz()" class="w-full py-4 btn-primary rounded-xl font-bold text-lg">진단 시작하기</button>
+        </div>
+
+        <!-- Step 2: 진단 -->
+        <div id="stepQuiz" class="hidden space-y-6 fade-in">
+            <div class="flex justify-between items-end px-2">
+                <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">Progress</div>
+                <div id="pageIndicator" class="text-blue-400 font-bold">1 / 20</div>
+            </div>
+            <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full btn-primary w-0 transition-all duration-300"></div>
+            </div>
+
+            <div id="questionCard" class="glass-card p-6 md:p-10 min-h-[300px] flex flex-col justify-between">
+                <div id="questionWrapper"></div>
+                <div class="flex justify-between items-center mt-10 space-x-4">
+                    <button id="prevBtn" onclick="prevQuestion()" class="flex-1 py-4 rounded-xl bg-slate-800 border border-slate-700 font-bold disabled:opacity-30">이전</button>
+                    <button id="nextBtn" onclick="handleNext()" class="flex-[2] py-4 btn-primary rounded-xl font-bold">다음 문항</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: 결과 -->
+        <div id="stepResult" class="hidden space-y-6 fade-in">
+            <div class="glass-card p-6 md:p-8">
+                <h2 class="text-xl font-bold text-center mb-8">진단 결과 분석</h2>
+                <div class="flex flex-col items-center mb-10">
+                    <div id="chartArea" class="relative w-64 h-64 border-2 border-slate-700 bg-slate-900/40 overflow-hidden rounded-lg">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-full h-[1px] bg-slate-700/50"></div>
+                            <div class="h-full w-[1px] bg-slate-700/50"></div>
+                        </div>
+                        <div class="absolute" style="left:33.3%; top:33.3%; width:33.3%; height:33.3%; background: rgba(234, 179, 8, 0.05); border: 1px dashed rgba(234, 179, 8, 0.3);"></div>
+                        <span class="absolute text-[10px] text-slate-500 font-bold" style="top: 5%; right: 5%;">모범형</span>
+                        <span class="absolute text-[10px] text-slate-500 font-bold" style="top: 5%; left: 5%;">소외형</span>
+                        <span class="absolute text-[10px] text-slate-500 font-bold" style="bottom: 5%; left: 5%;">수동형</span>
+                        <span class="absolute text-[10px] text-slate-500 font-bold" style="bottom: 5%; right: 5%;">순응형</span>
+                        <span class="absolute text-[8px] text-yellow-500/50" style="top: 45%; left: 45%;">실무형</span>
+                        <div id="userPoint" class="absolute w-5 h-5 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)] z-10 transition-all duration-1000 border-4 border-blue-500" style="left: 0%; bottom: 0%;"></div>
+                    </div>
+                    <div class="mt-8 grid grid-cols-2 gap-4 w-full text-center">
+                        <div class="p-3 bg-white/5 rounded-xl">
+                            <div class="text-[10px] text-slate-400 mb-1">독립적 사고</div>
+                            <div class="text-xl font-bold text-blue-400"><span id="resScore1">0</span>점</div>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-xl">
+                            <div class="text-[10px] text-slate-400 mb-1">적극적 행동</div>
+                            <div class="text-xl font-bold text-purple-400"><span id="resScore2">0</span>점</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-slate-400 mb-1"><span id="resUserName" class="text-white font-bold"></span> 님의 유형은</p>
+                    <h3 id="resTypeName" class="text-2xl font-bold point-gradient mb-4">유형 분석 중...</h3>
+                    <div class="bg-slate-800/50 p-5 rounded-2xl border border-white/5 text-left text-sm leading-relaxed text-slate-300" id="resTypeDesc"></div>
+                    <button onclick="location.reload()" class="mt-8 text-slate-500 text-sm hover:text-white underline underline-offset-4">다시 테스트하기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: 관리자 페이지 -->
+        <div id="stepAdmin" class="hidden space-y-6 fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">그룹별 진단 결과</h2>
+                <button onclick="location.reload()" class="text-sm bg-slate-800 px-3 py-1 rounded-lg">나가기</button>
+            </div>
+
+            <!-- 그룹 선택 탭 -->
+            <div class="glass-card p-4">
+                <div class="flex flex-wrap gap-2" id="groupTabs"></div>
+            </div>
+
+            <!-- 선택된 그룹 정보 -->
+            <div class="glass-card p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg" id="selectedGroupName">그룹을 선택하세요</h3>
+                        <p class="text-xs text-slate-400" id="selectedGroupCode"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-blue-400" id="selectedGroupCount">0</p>
+                        <p class="text-xs text-slate-400">참여자</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결과 테이블 -->
+            <div class="glass-card overflow-hidden">
+                <div class="overflow-x-auto custom-scroll">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-white/10 text-slate-400 font-bold">
+                            <tr>
+                                <th class="p-4">별명</th>
+                                <th class="p-4">유형</th>
+                                <th class="p-4">점수 (독/적)</th>
+                                <th class="p-4">날짜</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" class="divide-y divide-white/5"></tbody>
+                    </table>
+                    <div id="adminEmpty" class="p-10 text-center text-slate-500 hidden">그룹을 선택하거나 참여 데이터가 없습니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-auto py-8 text-center space-y-2">
+        <button onclick="openAdminModal()" class="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">관리자 전용</button>
+        <p class="text-[10px] text-slate-500 font-medium">© 2026 런투컨설팅. All Rights Reserved.</p>
+    </footer>
+
+    <!-- 관리자 로그인 모달 -->
+    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
+        <div class="glass-card p-8 w-full max-w-sm shadow-2xl border-blue-500/20">
+            <h3 class="text-lg font-bold mb-4">관리자 인증</h3>
+            <input type="password" id="adminPw" placeholder="비밀번호 입력 (1234)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center mb-4 focus:outline-none focus:border-blue-500">
+            <div class="flex space-x-3">
+                <button onclick="closeAdminModal()" class="flex-1 py-3 rounded-xl bg-slate-800 text-sm">취소</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 btn-primary rounded-xl text-sm font-bold">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 그룹 생성 모달 -->
+    <div id="groupModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
+        <div class="glass-card p-8 w-full max-w-md shadow-2xl border-blue-500/20">
+            <h3 class="text-lg font-bold mb-4">새 그룹 생성</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-slate-400 mb-2 block">그룹명</label>
+                    <input type="text" id="newGroupName" placeholder="예: KB손해보험 1기" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-sm text-slate-400 mb-2 block">입장 코드 (4자리 영문대문자)</label>
+                    <input type="text" id="newGroupCode" placeholder="예: KB01" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 uppercase">
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button onclick="closeGroupModal()" class="flex-1 py-3 rounded-xl bg-slate-800 text-sm">취소</button>
+                <button onclick="createGroup()" class="flex-1 py-3 btn-primary rounded-xl text-sm font-bold">생성</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let firebaseConfig;
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                console.warn('Firebase config not found, using default configuration');
+                firebaseConfig = { storageBucket: "artifacts" };
+            }
+        } catch (e) {
+            console.error('Error parsing firebase config:', e);
+            firebaseConfig = { storageBucket: "artifacts" };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'followership-test-v1';
+
+        let user = null;
+        let userName = "";
+        let userGroupCode = "";
+        let currentIdx = 0;
+        const answers = new Array(20).fill(null);
+        let selectedGroupCode = null;
+
+        const questions = [
+            { id: 1, text: "나의 일은 나에게 중요한 사회적 목표나 개인적인 꿈을 성취하는데 도움이 되는가?", category: "independent" },
+            { id: 2, text: "나의 개인 업무 목표가 조직의 목표와 조화를 이루고 있는가?", category: "active" },
+            { id: 3, text: "나는 나의 아이디어와 능력을 일과 조직에 쏟아 붓고, 헌신적이며 열정적으로 일하고 있는가?", category: "active" },
+            { id: 4, text: "나의 업무 열의가 동료 직원들까지 활기차게 만드는가?", category: "active" },
+            { id: 5, text: "나는 리더의 지시를 기다리거나 단순히 주는 일만 하는 것이 아니라, 조직의 목표를 위해 무엇이 가장 중요한지를 판단하면서 일하고 있는가?", category: "independent" },
+            { id: 6, text: "나는 리더와 조직에게 더욱 가치가 있는 사람이 되기 위해 나의 능력을 적극적으로 발휘하는가?", category: "active" },
+            { id: 7, text: "나는 새로운 일이 시작되었을 때 리더가 중요하다고 생각하는 업무에서 곧바로 성과를 내는가?", category: "active" },
+            { id: 8, text: "리더는 내가 기한 내에 일을 해낼 뿐만 아니라, 부족한 점을 채울 것이라는 점을 믿고 어려운 임무를 맡기는가?", category: "active" },
+            { id: 9, text: "나는 나의 업무 범위를 벗어나는 일도 찾아내서 완수하기 위해 솔선수범 하는가?", category: "active" },
+            { id: 10, text: "나는 프로젝트의 리더가 아닐 때에도 맡은 일보다 더 많은 일을 하고 능력껏 공헌을 하는가?", category: "active" },
+            { id: 11, text: "나는 리더나 조직의 목표에 공헌할 수 있는 새로운 아이디어를 찾아 적극적으로 제기하는가?", category: "independent" },
+            { id: 12, text: "나는 어려운 문제들을 해결해야 할 때, 리더에게 의존하기 보다 스스로 해결하려고 하는가?", category: "independent" },
+            { id: 13, text: "나는 아무 인정을 받지 못하더라도 다른 동료들이 좋은 평가를 받을 수 있도록 돕는가?", category: "active" },
+            { id: 14, text: "나는 필요할 경우 반대 의견을 내서라도 리더나 팀이 계획의 가능성과 위험성 모두를 볼 수 있도록 돕는가?", category: "independent" },
+            { id: 15, text: "나는 리더의 요구·목표·제약을 이해하고, 그것들을 충족시키기 위해서 열심히 일하는가?", category: "active" },
+            { id: 16, text: "나는 나에 대한 평가를 미루기 보다는 강점과 약점을 솔직하게 인정하는가?", category: "independent" },
+            { id: 17, text: "나는 리더가 내린 결정이나 판단이 적절한지 다시 생각해보는 습관이 있는가?", category: "independent" },
+            { id: 18, text: "나는 나의 전문 분야가 아니거나 개인적인 흥미와 관련 없는 일을 부탁할 때 \"No\"라고 하는가?", category: "independent" },
+            { id: 19, text: "나는 리더나 집단의 기준이 아니라 자신의 윤리적 기준에 따라 행동하는가?", category: "independent" },
+            { id: 20, text: "나는 불이익을 당한다고 해도 중요한 이슈에 대해 자기 견해를 주장하는가?", category: "independent" }
+        ];
+
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+                console.log('Anonymous authentication successful');
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert('인증 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.');
+            }
+        };
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (u) console.log('User authenticated:', u.uid);
+        });
+
+        initAuth();
+
+        // 입장 코드 확인
+        window.verifyGroupCode = async () => {
+            const code = document.getElementById('groupCode').value.trim().toUpperCase();
+            if (!code) {
+                alert("입장 코드를 입력해 주세요.");
+                return;
+            }
+
+            if (!user) {
+                alert('인증되지 않았습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            try {
+                const groupRef = doc(db, 'artifacts', appId, 'public', 'groups', code);
+                const groupSnap = await getDoc(groupRef);
+
+                if (!groupSnap.exists()) {
+                    alert("유효하지 않은 입장 코드입니다.");
+                    return;
+                }
+
+                const groupData = groupSnap.data();
+                userGroupCode = code;
+                
+                document.getElementById('stepCode').classList.add('hidden');
+                document.getElementById('stepName').classList.remove('hidden');
+                document.getElementById('groupInfo').innerText = `그룹: ${groupData.name} (${code})`;
+            } catch (e) {
+                console.error('Error verifying group code:', e);
+                alert('그룹 코드 확인 중 오류가 발생했습니다.');
+            }
+        };
+
+        window.startQuiz = () => {
+            const nameInput = document.getElementById('userName').value.trim();
+            if(!nameInput) {
+                alert("별명을 입력해 주세요.");
+                return;
+            }
+            userName = nameInput;
+            document.getElementById('stepName').classList.add('hidden');
+            document.getElementById('stepQuiz').classList.remove('hidden');
+            document.getElementById('headerSubtitle').innerText = `${userName} 님의 진단을 시작합니다.`;
+            renderQuestion();
+        };
+
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            const wrapper = document.getElementById('questionWrapper');
+            wrapper.innerHTML = `
+                <div class="fade-in">
+                    <div class="mb-8">
+                        <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-bold mb-4 uppercase tracking-tighter">Question ${q.id}</span>
+                        <h2 class="text-lg md:text-xl font-bold leading-snug break-keep">${q.text}</h2>
+                    </div>
+                    <div class="grid grid-cols-6 gap-2 sm:gap-4 items-center">
+                        ${[0, 1, 2, 3, 4, 5].map(n => `
+                            <div class="score-option flex flex-col items-center space-y-2">
+                                <input type="radio" name="score" id="v${n}" value="${n}" ${answers[currentIdx] === n ? 'checked' : ''}>
+                                <label for="v${n}">${n}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between mt-4 px-1 text-[10px] text-slate-500 font-bold uppercase">
+                        <span>거의 드물다</span>
+                        <span>거의 언제나</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('pageIndicator').innerText = `${currentIdx + 1} / 20`;
+            document.getElementById('progressBar').style.width = `${((currentIdx + 1) / 20) * 100}%`;
+            document.getElementById('prevBtn').disabled = currentIdx === 0;
+            document.getElementById('nextBtn').innerText = currentIdx === 19 ? "결과 제출하기" : "다음 문항";
+            document.querySelectorAll('input[name="score"]').forEach(radio => {
+                radio.onchange = (e) => { answers[currentIdx] = parseInt(e.target.value); };
+            });
+        }
+
+        window.handleNext = () => {
+            if(answers[currentIdx] === null) { alert("항목을 선택해 주세요."); return; }
+            if(currentIdx < 19) { currentIdx++; renderQuestion(); }
+            else { saveAndShowResult(); }
+        };
+
+        window.prevQuestion = () => { if(currentIdx > 0) { currentIdx--; renderQuestion(); } };
+
+        const saveAndShowResult = async () => {
+            if (!user) {
+                alert('인증되지 않았습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            let indScore = 0;
+            let actScore = 0;
+            questions.forEach((q, i) => {
+                if(q.category === "independent") indScore += answers[i];
+                else actScore += answers[i];
+            });
+
+            let type = "";
+            let desc = "";
+            const m = 30;
+            const rLow = 20;
+            const rHigh = 40;
+            
+            if (indScore >= rLow && indScore <= rHigh && actScore >= rLow && actScore <= rHigh) {
+                type = "실무형";
+                desc = "상황에 따라 적절히 대처하는 유형입니다. 조직의 안정을 중시하며 리더의 요구에 부응하지만, 때로는 자신의 안위를 위해 비판을 삼가거나 필요 이상의 열정을 쏟지 않는 실리적인 모습을 보입니다.";
+            } else if (indScore > m && actScore > m) {
+                type = "모범형";
+                desc = "리더의 지시가 없어도 조직의 목표를 위해 스스로 판단하고 열정적으로 행동하는 가장 이상적인 유형입니다. 건설적인 비판을 두려워하지 않으며, 조직의 성공을 위해 헌신하는 진정한 파트너입니다.";
+            } else if (indScore > m && actScore <= m) {
+                type = "소외형";
+                desc = "비판적 사고는 뛰어나지만 행동은 수동적인 유형입니다. 아이디어는 많으나 이를 실행에 옮기려는 의지가 다소 부족할 수 있으며, 리더와 대립하거나 거리를 두는 경향이 있습니다.";
+            } else if (indScore <= m && actScore > m) {
+                type = "순응형";
+                desc = "리더의 지시에는 매우 적극적이고 성실하지만, 스스로 비판적인 판단을 내리는 데는 소극적인 유형입니다. 전형적인 'YES-MAN'으로, 리더의 잘못된 판단에 제동을 걸지 못할 위험이 있습니다.";
+            } else {
+                type = "수동형";
+                desc = "스스로 생각하기보다는 시키는 일만 최소한으로 수행하는 유형입니다. 열의가 부족하고 책임감이 낮아 보일 수 있으며, 리더의 세심한 관리와 동기부여가 필요합니다.";
+            }
+
+            try {
+                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+                const docData = {
+                    name: userName,
+                    groupCode: userGroupCode,
+                    indScore: indScore,
+                    actScore: actScore,
+                    type: type,
+                    createdAt: serverTimestamp(),
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('Saving result:', docData);
+                await addDoc(resultsRef, docData);
+                console.log('Result saved successfully');
+            } catch (e) {
+                console.error('Error saving result:', e);
+                alert('결과 저장 중 오류가 발생했습니다. 하지만 결과는 확인하실 수 있습니다.');
+            }
+
+            document.getElementById('stepQuiz').classList.add('hidden');
+            document.getElementById('stepResult').classList.remove('hidden');
+            document.getElementById('resUserName').innerText = userName;
+            document.getElementById('resTypeName').innerText = type;
+            document.getElementById('resTypeDesc').innerText = desc;
+            document.getElementById('resScore1').innerText = indScore;
+            document.getElementById('resScore2').innerText = actScore;
+            
+            const px = (actScore / 60) * 100;
+            const py = (indScore / 60) * 100;
+            const userPoint = document.getElementById('userPoint');
+            userPoint.style.left = `calc(${px}% - 10px)`;
+            userPoint.style.bottom = `calc(${py}% - 10px)`;
+        };
+
+        window.openAdminModal = () => document.getElementById('customModal').classList.remove('hidden');
+        window.closeAdminModal = () => document.getElementById('customModal').classList.add('hidden');
+        
+        window.verifyAdmin = async () => {
+            const pw = document.getElementById('adminPw').value;
+            if(pw === "1234") {
+                closeAdminModal();
+                showAdminView();
+            } else {
+                alert("비밀번호가 틀렸습니다.");
+            }
+        };
+
+        window.openGroupModal = () => document.getElementById('groupModal').classList.remove('hidden');
+        window.closeGroupModal = () => {
+            document.getElementById('groupModal').classList.add('hidden');
+            document.getElementById('newGroupName').value = '';
+            document.getElementById('newGroupCode').value = '';
+        };
+
+        window.createGroup = async () => {
+            const name = document.getElementById('newGroupName').value.trim();
+            const code = document.getElementById('newGroupCode').value.trim().toUpperCase();
+
+            if (!name || !code) {
+                alert('그룹명과 입장 코드를 모두 입력해주세요.');
+                return;
+            }
+
+            if (code.length !== 4 || !/^[A-Z0-9]+$/.test(code)) {
+                alert('입장 코드는 4자리 영문 대문자와 숫자로 입력해주세요.');
+                return;
+            }
+
+            try {
+                const groupRef = doc(db, 'artifacts', appId, 'public', 'groups', code);
+                const groupSnap = await getDoc(groupRef);
+
+                if (groupSnap.exists()) {
+                    alert('이미 사용 중인 입장 코드입니다. 다른 코드를 사용해주세요.');
+                    return;
+                }
+
+                await setDoc(groupRef, {
+                    name: name,
+                    code: code,
+                    createdAt: serverTimestamp(),
+                    timestamp: new Date().toISOString()
+                });
+
+                alert(`그룹이 생성되었습니다!\n그룹명: ${name}\n입장 코드: ${code}`);
+                closeGroupModal();
+                showAdminView();
+            } catch (e) {
+                console.error('Error creating group:', e);
+                alert('그룹 생성 중 오류가 발생했습니다.');
+            }
+        };
+
+        async function showAdminView() {
+            if (!user) {
+                alert('인증되지 않았습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+                return;
+            }
+
+            document.getElementById('stepCode').classList.add('hidden');
+            document.getElementById('stepName').classList.add('hidden');
+            document.getElementById('stepQuiz').classList.add('hidden');
+            document.getElementById('stepResult').classList.add('hidden');
+            document.getElementById('stepAdmin').classList.remove('hidden');
+
+            await loadGroups();
+        }
+
+        async function loadGroups() {
+            const tabsContainer = document.getElementById('groupTabs');
+            tabsContainer.innerHTML = '<div class="text-slate-500 text-sm">불러오는 중...</div>';
+
+            try {
+                const groupsRef = collection(db, 'artifacts', appId, 'public', 'groups');
+                const snapshot = await getDocs(groupsRef);
+
+                tabsContainer.innerHTML = '';
+
+                // 그룹 생성 버튼
+                const createBtn = document.createElement('button');
+                createBtn.className = 'tab-button bg-green-600/20 text-green-400 hover:bg-green-600/30';
+                createBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>새 그룹 생성';
+                createBtn.onclick = openGroupModal;
+                tabsContainer.appendChild(createBtn);
+
+                if (snapshot.empty) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'text-slate-500 text-sm';
+                    emptyMsg.innerText = '생성된 그룹이 없습니다.';
+                    tabsContainer.appendChild(emptyMsg);
+                    return;
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const btn = document.createElement('button');
+                    btn.className = 'tab-button';
+                    btn.innerText = `${data.name} (${data.code})`;
+                    btn.onclick = () => selectGroup(data.code, data.name);
+                    tabsContainer.appendChild(btn);
+                });
+            } catch (e) {
+                console.error('Error loading groups:', e);
+                tabsContainer.innerHTML = '<div class="text-red-400 text-sm">그룹 로드 실패</div>';
+            }
+        }
+
+        window.selectGroup = async (code, name) => {
+            selectedGroupCode = code;
+            
+            // 탭 활성화 표시
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.innerText.includes(code)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            document.getElementById('selectedGroupName').innerText = name;
+            document.getElementById('selectedGroupCode').innerText = `입장 코드: ${code}`;
+
+            await loadGroupResults(code);
+        };
+
+        async function loadGroupResults(groupCode) {
+            const tbody = document.getElementById('adminTableBody');
+            const emptyMsg = document.getElementById('adminEmpty');
+            const countEl = document.getElementById('selectedGroupCount');
+            
+            tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center">불러오는 중...</td></tr>';
+            emptyMsg.classList.add('hidden');
+
+            try {
+                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+                const q = query(resultsRef, where('groupCode', '==', groupCode), orderBy('createdAt', 'desc'));
+                const snapshot = await getDocs(q);
+                
+                tbody.innerHTML = "";
+                countEl.innerText = snapshot.size;
+                
+                if(snapshot.empty) {
+                    emptyMsg.classList.remove('hidden');
+                    return;
+                }
+
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    let date = "-";
+                    if (data.createdAt && data.createdAt.toDate) {
+                        date = data.createdAt.toDate().toLocaleDateString('ko-KR');
+                    } else if (data.timestamp) {
+                        date = new Date(data.timestamp).toLocaleDateString('ko-KR');
+                    }
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4 font-bold text-blue-300">${data.name || '알 수 없음'}</td>
+                        <td class="p-4 text-xs">${data.type || '알 수 없음'}</td>
+                        <td class="p-4 font-mono">${data.indScore}/${data.actScore}</td>
+                        <td class="p-4 text-xs text-slate-500">${date}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error('Error loading group results:', e);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-400">데이터 로드 실패: ${e.message}</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>
